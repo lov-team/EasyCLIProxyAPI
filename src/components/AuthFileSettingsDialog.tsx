@@ -144,7 +144,16 @@ export function AuthFileSettingsDialog({ name, provider = '', onClose, onSaved }
             <fieldset disabled={saving}>
               <section className="credential-settings-section">
                 <h3>{t('authFiles.settings.routing')}</h3>
-                <div className="credential-settings-grid">{textField('prefix')}{textField('proxy_url')}{textField('priority')}{textField('weight')}{textField('max_concurrency')}{booleanField('disable_cooling')}{showWebsockets ? booleanField('websockets') : null}</div>
+                <div className="credential-settings-grid">{textField('prefix')}{textField('proxy_url')}{textField('priority')}{textField('weight')}{textField('max_concurrency')}
+                  <label className="credential-settings-field">
+                    <span>{t('authFiles.settings.account_group')} <code>account_group</code></span>
+                    <select value={draft.account_group} onChange={(event) => update('account_group', event.currentTarget.value)}>
+                      <option value="">{t('authFiles.settings.account_groupNone')}</option>
+                      {[1, 2, 3, 4, 5, 6].map((group) => <option key={group} value={String(group)}>{t('authFiles.settings.account_groupOption', { group, start: String((group - 1) * 4).padStart(2, '0'), end: group === 6 ? '24' : String(group * 4).padStart(2, '0') })}</option>)}
+                    </select>
+                    <small>{t('authFiles.settings.account_groupHint')}</small>
+                  </label>
+                  {booleanField('disable_cooling')}{showWebsockets ? booleanField('websockets') : null}</div>
               </section>
               <section className="credential-settings-section">
                 <h3>{t('authFiles.settings.excluded_models')} <code>excluded_models</code></h3>

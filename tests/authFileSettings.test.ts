@@ -5,7 +5,7 @@ describe('credential settings', () => {
   it('reads all fields and legacy aliases without retaining credential tokens', () => {
     const draft = authFileSettingsFromPayload(JSON.stringify({ prefix: 'team', 'proxy-url': 'socks5://localhost:1080', priority: -4, weight: 6,
       'disable-cooling': false, websocket: true, 'excluded-models': [' GPT-* ', 'gpt-*'], headers: { 'X-Team': 'test' }, note: 'note', access_token: 'secret' }));
-    expect(draft).toEqual({ prefix: 'team', proxy_url: 'socks5://localhost:1080', priority: '-4', weight: '6', max_concurrency: '', disable_cooling: 'false',
+    expect(draft).toEqual({ prefix: 'team', proxy_url: 'socks5://localhost:1080', priority: '-4', weight: '6', max_concurrency: '', account_group: '', disable_cooling: 'false',
       websockets: 'true', excluded_models: 'gpt-*', headers: '{\n  "X-Team": "test"\n}', note: 'note', advanced: {} });
     expect(JSON.stringify(draft)).not.toContain('secret');
   });
@@ -69,6 +69,9 @@ describe('credential settings', () => {
     expect(buildAuthFileSettingsPatch(original, { ...original, max_concurrency: '4' })).toEqual({ max_concurrency: 4 });
     expect(buildAuthFileSettingsPatch(original, { ...original, max_concurrency: '' })).toEqual({ max_concurrency: null });
     expect(buildAuthFileSettingsPatch(original, { ...original, max_concurrency: '10' })).toEqual({});
+    const ungrouped = authFileSettingsFromPayload({});
+    expect(buildAuthFileSettingsPatch(ungrouped, { ...ungrouped, account_group: '3' })).toEqual({ account_group: 3 });
+    expect(buildAuthFileSettingsPatch({ ...ungrouped, account_group: '3' }, ungrouped)).toEqual({ account_group: null });
   });
 
   it('rejects unsafe values before sending a request', async () => {

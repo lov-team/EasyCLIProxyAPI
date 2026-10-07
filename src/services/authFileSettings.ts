@@ -15,6 +15,7 @@ export type AuthFileSettingsDraft = {
   priority: string;
   weight: string;
   max_concurrency: string;
+  account_group: string;
   disable_cooling: BooleanOverride;
   websockets: BooleanOverride;
   excluded_models: string;
@@ -24,7 +25,7 @@ export type AuthFileSettingsDraft = {
   normalizeCloakMetadata?: string[];
 };
 
-const fail = (key: 'metadata' | 'headers' | 'weight' | 'priority' | 'max_concurrency') => {
+const fail = (key: 'metadata' | 'headers' | 'weight' | 'priority' | 'max_concurrency' | 'account_group') => {
   throw new Error(translate(getCurrentLocale(), `authFiles.settings.invalid.${key}`));
 };
 
@@ -99,6 +100,7 @@ export const authFileSettingsFromPayload = (payload: unknown): AuthFileSettingsD
     priority: text(metadata.priority),
     weight: text(metadata.weight),
     max_concurrency: text(read('max_concurrency', 'concurrency')),
+    account_group: text(read('account_group', 'group')),
     disable_cooling: override(read('disable_cooling', 'disable-cooling'), true),
     websockets: override(read('websockets', 'websocket')),
     excluded_models: authFileExcludedRulesFromPayload(metadata).join('\n'),
@@ -140,6 +142,16 @@ export const buildAuthFileSettingsPatch = (
       return fail('max_concurrency');
     } else if (Number(text) !== Number(original.max_concurrency)) {
       patch.max_concurrency = Number(text);
+    }
+  }
+  if (draft.account_group !== original.account_group) {
+    const text = draft.account_group.trim();
+    if (!text) {
+      if (original.account_group.trim()) patch.account_group = null;
+    } else if (!/^[1-6]$/.test(text)) {
+      return fail('account_group');
+    } else if (Number(text) !== Number(original.account_group)) {
+      patch.account_group = Number(text);
     }
   }
   for (const key of ['disable_cooling', 'websockets'] as const) {

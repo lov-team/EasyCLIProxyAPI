@@ -96,12 +96,12 @@ export function AuthFileSettingsDialog({ name, provider = '', onClose, onSaved }
   const candidates = oauthModelCandidates(models, rules).filter((model) => modelSearchText({ name: model.id, displayName: model.displayName }).includes(query));
   const resolvedProvider = credentialProviderKey(name, provider);
   const showWebsockets = resolvedProvider === 'codex' || resolvedProvider === 'xai' || draft?.websockets === 'true' || draft?.websockets === 'false';
-  const textField = (key: 'prefix' | 'proxy_url' | 'priority' | 'weight') => (
+  const textField = (key: 'prefix' | 'proxy_url' | 'priority' | 'weight' | 'max_concurrency') => (
     <label className="credential-settings-field">
       <span>{t(`authFiles.settings.${key}`)} <code>{key}</code></span>
       <input value={draft?.[key] ?? ''} onChange={(event) => update(key, event.currentTarget.value)}
-        inputMode={key === 'priority' || key === 'weight' ? 'numeric' : undefined}
-        placeholder={key === 'priority' ? '0' : key === 'weight' ? '1' : key === 'proxy_url' ? 'socks5://127.0.0.1:1080' : ''}
+        inputMode={key === 'priority' || key === 'weight' || key === 'max_concurrency' ? 'numeric' : undefined}
+        placeholder={key === 'priority' ? '0' : key === 'weight' ? '1' : key === 'max_concurrency' ? '10' : key === 'proxy_url' ? 'socks5://127.0.0.1:1080' : ''}
         autoComplete="off" spellCheck={false} />
       <small>{t(`authFiles.settings.${key}Hint`)}</small>
     </label>
@@ -144,7 +144,7 @@ export function AuthFileSettingsDialog({ name, provider = '', onClose, onSaved }
             <fieldset disabled={saving}>
               <section className="credential-settings-section">
                 <h3>{t('authFiles.settings.routing')}</h3>
-                <div className="credential-settings-grid">{textField('prefix')}{textField('proxy_url')}{textField('priority')}{textField('weight')}{booleanField('disable_cooling')}{showWebsockets ? booleanField('websockets') : null}</div>
+                <div className="credential-settings-grid">{textField('prefix')}{textField('proxy_url')}{textField('priority')}{textField('weight')}{textField('max_concurrency')}{booleanField('disable_cooling')}{showWebsockets ? booleanField('websockets') : null}</div>
               </section>
               <section className="credential-settings-section">
                 <h3>{t('authFiles.settings.excluded_models')} <code>excluded_models</code></h3>

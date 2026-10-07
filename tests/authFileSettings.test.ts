@@ -5,7 +5,7 @@ describe('credential settings', () => {
   it('reads all fields and legacy aliases without retaining credential tokens', () => {
     const draft = authFileSettingsFromPayload(JSON.stringify({ prefix: 'team', 'proxy-url': 'socks5://localhost:1080', priority: -4, weight: 6,
       'disable-cooling': false, websocket: true, 'excluded-models': [' GPT-* ', 'gpt-*'], headers: { 'X-Team': 'test' }, note: 'note', access_token: 'secret' }));
-    expect(draft).toEqual({ prefix: 'team', proxy_url: 'socks5://localhost:1080', priority: '-4', weight: '6', disable_cooling: 'false',
+    expect(draft).toEqual({ prefix: 'team', proxy_url: 'socks5://localhost:1080', priority: '-4', weight: '6', max_concurrency: '', disable_cooling: 'false',
       websockets: 'true', excluded_models: 'gpt-*', headers: '{\n  "X-Team": "test"\n}', note: 'note', advanced: {} });
     expect(JSON.stringify(draft)).not.toContain('secret');
   });
@@ -64,9 +64,17 @@ describe('credential settings', () => {
       .toEqual({ disable_cooling: false, websockets: true, weight: 0 });
   });
 
+  it('saves this account max concurrency and clears it back to the default', () => {
+    const original = authFileSettingsFromPayload({ max_concurrency: 10 });
+    expect(buildAuthFileSettingsPatch(original, { ...original, max_concurrency: '4' })).toEqual({ max_concurrency: 4 });
+    expect(buildAuthFileSettingsPatch(original, { ...original, max_concurrency: '' })).toEqual({ max_concurrency: null });
+    expect(buildAuthFileSettingsPatch(original, { ...original, max_concurrency: '10' })).toEqual({});
+  });
+
   it('rejects unsafe values before sending a request', async () => {
     const original = authFileSettingsFromPayload({});
     for (const change of [{ priority: '1.5' }, { priority: '9007199254740992' }, { weight: '1e3' }, { weight: '1000001' }, { weight: 'NaN' },
+      { max_concurrency: '0' }, { max_concurrency: '1.5' }, { max_concurrency: '100001' },
       { headers: '[]' }, { headers: '{"X-Test":3}' }, { headers: '{"Invalid Header":"a"}' }, { headers: '{"X-Test":"a\\r\\nb"}' },
       { headers: '{"X-Test":"a","x-test":"b"}' }]) {
       let called = false;

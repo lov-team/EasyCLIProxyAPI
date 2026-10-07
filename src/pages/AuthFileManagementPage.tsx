@@ -566,7 +566,7 @@ export function AuthFileManagementPage() {
                   </div>
                   <div className="auth-list-cell auth-list-status" data-label={t('authFiles.list.status')}>
                     <span className={`auth-status-badge ${hasCooldown && !health.disabled ? 'warning' : health.tone}`} title={statusLabel}>{statusLabel}</span>
-                    <small>{t('authFiles.priority.button', { priority })}</small>
+                    <small>{t('authFiles.priority.button', { priority })}{readNumber(file, 'concurrency') === null ? '' : ` · ${t('authFiles.concurrency', { current: readNumber(file, 'in_flight') ?? 0, max: readNumber(file, 'concurrency') ?? 0 })}`}</small>
                   </div>
                   <div className="auth-list-cell auth-list-recent" data-label={t('authFiles.list.recent')}><AuthFileRequestStatus file={file} compact /></div>
                   <div className="auth-list-cell auth-list-usage" data-label={t('authFiles.usage.title')}><AuthFileUsageSummary file={file} /></div>

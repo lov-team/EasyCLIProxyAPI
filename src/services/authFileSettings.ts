@@ -14,6 +14,7 @@ export type AuthFileSettingsDraft = {
   proxy_url: string;
   priority: string;
   weight: string;
+  max_concurrency: string;
   disable_cooling: BooleanOverride;
   websockets: BooleanOverride;
   excluded_models: string;
@@ -23,7 +24,7 @@ export type AuthFileSettingsDraft = {
   normalizeCloakMetadata?: string[];
 };
 
-const fail = (key: 'metadata' | 'headers' | 'weight' | 'priority') => {
+const fail = (key: 'metadata' | 'headers' | 'weight' | 'priority' | 'max_concurrency') => {
   throw new Error(translate(getCurrentLocale(), `authFiles.settings.invalid.${key}`));
 };
 
@@ -97,6 +98,7 @@ export const authFileSettingsFromPayload = (payload: unknown): AuthFileSettingsD
     proxy_url: text(read('proxy_url', 'proxy-url')),
     priority: text(metadata.priority),
     weight: text(metadata.weight),
+    max_concurrency: text(read('max_concurrency', 'concurrency')),
     disable_cooling: override(read('disable_cooling', 'disable-cooling'), true),
     websockets: override(read('websockets', 'websocket')),
     excluded_models: authFileExcludedRulesFromPayload(metadata).join('\n'),
@@ -129,6 +131,16 @@ export const buildAuthFileSettingsPatch = (
     const normalized = value === null ? null : Math.max(0, value);
     const previous = original.weight.trim() ? Math.max(0, Number(original.weight)) : null;
     if (normalized !== previous) patch.weight = normalized;
+  }
+  if (draft.max_concurrency !== original.max_concurrency) {
+    const text = draft.max_concurrency.trim();
+    if (!text) {
+      if (original.max_concurrency.trim()) patch.max_concurrency = null;
+    } else if (!/^\d+$/.test(text) || !Number.isSafeInteger(Number(text)) || Number(text) < 1 || Number(text) > 100_000) {
+      return fail('max_concurrency');
+    } else if (Number(text) !== Number(original.max_concurrency)) {
+      patch.max_concurrency = Number(text);
+    }
   }
   for (const key of ['disable_cooling', 'websockets'] as const) {
     if (draft[key] !== original[key]) patch[key] = draft[key] === '' ? null : draft[key] === 'true';
